@@ -1,0 +1,18 @@
+TickerList:
+   name: "TickerList"
+   fields:
+     -
+       name: 'Country'
+       dtype: 'char(32)'
+     -
+       name: 'Symbol'
+       dtype: 'char(4)'
+     -
+       name: 'SecurityName'
+       dtype: 'char(32)'
+     -
+       name: 'Exchange'
+       dtype: 'char(32)'
+     -
+       name: 'Sector_gf'
+       dtype: 'char(32)'
