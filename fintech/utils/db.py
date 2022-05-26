@@ -75,7 +75,7 @@ class SQliteDB:
             if conn is not None:
                 conn.close()
 
-    def insert_into(self, dataframe, table_name, dtypes={}, chunk_size=10000):
+    def insert_into(self, dataframe, table_name, dtypes={}, chunk_size=100000):
 
         if not isinstance(dataframe, pd.DataFrame):
             raise TypeError('input must be a dataframe')
@@ -89,7 +89,7 @@ class SQliteDB:
         try:
             engine = self.create_connection()
             dataframe = dataframe.where((pd.notnull(dataframe)), None)
-            dataframe.to_sql(table_name.lower(), con=engine, chunksize=chunk_size,
+            dataframe.to_sql(table_name, con=engine, chunksize=chunk_size,
                              if_exists='append', index=False, dtype=dtypes)
 
         except Exception as error:

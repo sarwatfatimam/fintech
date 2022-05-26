@@ -29,5 +29,5 @@ TickerOCHL:
        name: 'Dividends'
        dtype: 'decimal(6,3)'
      -
-       name: 'Stocksplits'
+       name: 'StockSplits'
        dtype: 'decimal(6,3)'
