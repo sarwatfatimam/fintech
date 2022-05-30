@@ -1,0 +1,33 @@
+Finance:
+   name: "FinanceData"
+   fields:
+     -
+       name: 'Country'
+       dtype: 'char(32)'
+     -
+       name: 'Ticker'
+       dtype: 'char(4)'
+     -
+       name: 'Year'
+       dtype: 'char(4)'
+     -
+       name: 'Month'
+       dtype: 'char(4)'
+     -
+       name: 'Quarter'
+       dtype: 'varchar(24)'
+     -
+       name: 'Indicator'
+       dtype: 'varchar(32)'
+     -
+       name: 'Value'
+       dtype: 'decimal(12,3)'
+     -
+       name: 'ReportPeriod'
+       dtype: 'char(32)'
+     -
+       name: 'LastUpdatedDateTime'
+       dtype: 'datetime'
+     -
+       name: 'RawFile'
+       dtype: 'varchar(64)'

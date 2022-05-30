@@ -1,11 +1,13 @@
 from fintech.etl.master_data import MasterData
 from fintech.etl.ochl_data import OCHLData
+from fintech.etl.financial_data import FinanceData
 
 
 def etl():
 
-    MasterData().execute()
-    OCHLData().execute()
+    # MasterData().execute()
+    # OCHLData().execute()
+    FinanceData().execute()
 
 
 if __name__ == '__main__':

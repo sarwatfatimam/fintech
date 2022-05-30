@@ -5,7 +5,7 @@ TickerList:
        name: 'Country'
        dtype: 'char(32)'
      -
-       name: 'Symbol'
+       name: 'Ticker'
        dtype: 'char(4)'
      -
        name: 'SecurityName'
