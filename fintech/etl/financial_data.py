@@ -1,4 +1,5 @@
 import os
+import re
 import csv
 import pandas as pd
 import dateutil.parser as dparser
@@ -45,6 +46,9 @@ class FinanceData:
                         ticker.append(row[0])
                         country.append(row[2])
                         sector.append(row[3])
+                    if re.search('annual data', ','.join([i.lower() for i in row])):
+                        annual_quarter_data = pd.read_csv(csv_file, header=None)
+                        aqd_transposed = annual_quarter_data.T
                     line_count += 1
         df = pd.DataFrame({'Country': country, 'Ticker': ticker,
                            'Sector': sector, 'LastUpdatedDateTime': update_date, 'RawFile': raw_file})
