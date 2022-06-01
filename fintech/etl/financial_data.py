@@ -34,6 +34,7 @@ class FinanceData:
         ticker = []
         sector = []
         update_date = []
+        indicator_df = pd.DataFrame()
         for f in self.raw_files:
             raw_file.append(f)
             with open(f'{self.raw_dir_path}/{f}') as csv_file:
@@ -49,6 +50,11 @@ class FinanceData:
                     if re.search('annual data', ','.join([i.lower() for i in row])):
                         annual_quarter_data = pd.read_csv(csv_file, header=None)
                         aqd_transposed = annual_quarter_data.T
+                        for c in aqd_transposed.columns.tolist():
+                            temp = pd.DataFrame(aqd_transposed[c][1:])
+                            temp['indicator'] = aqd_transposed[c][0]
+                            temp.rename(columns={c: 'value'}, inplace=True)
+                            indicator_df = pd.concat([indicator_df, temp])
                     line_count += 1
         df = pd.DataFrame({'Country': country, 'Ticker': ticker,
                            'Sector': sector, 'LastUpdatedDateTime': update_date, 'RawFile': raw_file})
@@ -61,9 +67,9 @@ class FinanceData:
 
 
 
-            # get country
-            # get ticket
-            # get last updated data
-            # get year, month, report period, indicator, value
-            # It will updated the ticker sector csv file in master.
+        # get country
+        # get ticket
+        # get last updated data
+        # get year, month, report period, indicator, value
+        # It will updated the ticker sector csv file in master.
 
