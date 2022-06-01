@@ -64,12 +64,3 @@ class FinanceData:
         self.create_db_table()
         print(self.raw_files)
         self.process_csv_files()
-
-
-
-        # get country
-        # get ticket
-        # get last updated data
-        # get year, month, report period, indicator, value
-        # It will updated the ticker sector csv file in master.
-
