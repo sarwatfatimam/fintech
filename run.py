@@ -5,8 +5,8 @@ from fintech.etl.financial_data import FinanceData
 
 def etl():
 
-    MasterData().execute()
-    OCHLData().execute()
+    # MasterData().execute()
+    # OCHLData().execute()
     FinanceData().execute()
 
 
