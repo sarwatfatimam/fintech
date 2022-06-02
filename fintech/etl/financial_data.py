@@ -1,5 +1,6 @@
 import csv
 import math as m
+import numpy as np
 import os
 import re
 
@@ -53,21 +54,23 @@ class FinanceData:
                         for c in aqd_transposed.columns.tolist():
                             if c + 1 <= (len(aqd_transposed.columns.tolist()) - 1):
                                 temp = pd.DataFrame(aqd_transposed[[0, c + 1]][2:])
-                                temp['indicator'] = aqd_transposed[c + 1][0]
-                                temp.rename(columns={c + 1: 'value', 0: 'Period'}, inplace=True)
+                                temp['Indicator'] = aqd_transposed[c + 1][0]
+                                temp.rename(columns={c + 1: 'Value', 0: 'Period'}, inplace=True)
+
                                 indicator_df = pd.concat([indicator_df, temp])
                                 indicator_df[['Country', 'Ticker', 'Sector', 'RawFile',
                                               'LastUpdatedDateTime', 'ReportPeriod']] = country, ticker, sector, \
                                                                                         f, update_date, None
-                                indicator_df['Year'] = indicator_df['Period'].apply(
-                                    lambda x: x[0:4]).replace(r'[a-zA-Z]', '', regex=True)
-                                indicator_df['Month'] = indicator_df['Period'].apply(
-                                    lambda x: x[4:6]).replace(r'[a-zA-Z]', '', regex=True)
-                                indicator_df['Quarter'] = indicator_df['Month'].replace("", None).astype(int).apply(
-                                    lambda x: 'Q' + str(m.ceil(x / 3)))
                         processed_dfs.append(indicator_df)
                     line_count += 1
-        return pd.concat(processed_dfs)
+        processed_dfs = pd.concat(processed_dfs)
+        processed_dfs['Period'] = processed_dfs['Period'].replace(r'[a-zA-Z]', '', regex=True)
+        processed_dfs['Year'] = processed_dfs['Period'].astype(str).str[:4]
+        processed_dfs['Month'] = processed_dfs['Period'].astype(str).str[4:6]
+        processed_dfs['Quarter'] = 'Q' + np.ceil(processed_dfs['Month'].replace("",None).astype(int)/3).astype(str)
+        processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
+        return processed_dfs[['Country', 'Ticker', 'Year', 'Month', 'Quarter', 'Indicator', 'Value', 'ReportPeriod',
+                              'LastUpdatedDateTime', 'RawFile']]
 
     def execute(self):
         self.create_db_table()
