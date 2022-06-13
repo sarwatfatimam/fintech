@@ -1,6 +1,7 @@
 from fintech.etl.master_data import MasterData
 from fintech.etl.ochl_data import OCHLData
 from fintech.etl.financial_data import FinanceData
+from fintech.utils.db import SQliteDB
 
 
 def etl():
@@ -13,17 +14,10 @@ def etl():
 if __name__ == '__main__':
     etl()
     # Testing that table are created and loaded
-    from fintech.utils.db import SQliteDB
-    db = SQliteDB('master_data')
-    print('master', db.execute('SHOW TABLES'))
-    db = SQliteDB('finance_data')
-    print('finance', db.execute('SHOW TABLES'))
-    db = SQliteDB('ohcl_data')
-    print('ohcl', db.execute('SHOW TABLES'))
-    # print(db.select('SELECT * FROM TickerList'))
-    # print(db.select('SELECT name FROM sqlite_schema WHERE type="table" ORDER BY name; '))
-    # db = SQliteDB('ochl_data')
-    # print(db.select('SELECT name FROM sqlite_schema WHERE type="table" ORDER BY name; '))
-    # # print(db.select('SELECT * FROM TickerOCHLAll'))
-    # db = SQliteDB('finance_data')
-    # print(db.select('SELECT name FROM sqlite_schema WHERE type="table" ORDER BY name; '))
+    db_master = SQliteDB('master_data')
+    db_finance = SQliteDB('finance_data')
+    db_ochl = SQliteDB('ochl_data')
+    print('master', db_master.select('SELECT name FROM sqlite_schema WHERE type="table";'))
+    print('finance', db_finance.select('SELECT name FROM sqlite_schema WHERE type="table";'))
+    print('ohcl', db_ochl.select('SELECT name FROM sqlite_schema WHERE type="table";'))
+    # print(db_master.select('SELECT * FROM TickerList'))

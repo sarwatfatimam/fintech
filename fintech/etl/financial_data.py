@@ -1,5 +1,4 @@
 import csv
-import math as m
 import numpy as np
 import os
 import re
@@ -39,6 +38,7 @@ class FinanceData:
         indicator_df = pd.DataFrame()
         processed_dfs = []
         for f in self.raw_files:
+            print(f'Processing file {f}')
             with open(f'{self.raw_dir_path}/{f}') as csv_file:
                 csv_reader = csv.reader(csv_file)
                 line_count = 0
