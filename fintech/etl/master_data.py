@@ -11,6 +11,18 @@ class MasterData:
         self.mapping = pd.DataFrame(self.schema['fields'])
         self.raw_dir_path = './fintech/raw/master'
         self.db = SQliteDB('master_data')
+        self._sector = pd.DataFrame()
+
+    @property
+    def sector(self):
+        if self._sector.empty:
+            db = SQliteDB('finance_data')
+            query = 'SELECT Distinct Country, Ticker, Sector FROM FinanceData'
+            self._sector = db.select(query)
+            self._sector.rename(columns={'Sector': 'sector_gf',
+                                         'Country': 'country',
+                                         'Ticker': 'ticker'}, inplace=True)
+        return self._sector
 
     def create_db_table(self):
         self.db.create_table(mappings=self.mapping, table_name=self.schema['name'])
@@ -20,10 +32,14 @@ class MasterData:
 
     def processing(self):
         df_ticker_list = pd.read_csv(self.raw_dir_path + '/ticker_list_us.csv')
-        df_sector_list = pd.read_csv(self.raw_dir_path + '/ticker_sector_us.csv').set_index(['country', 'ticker'])
-        df_ticker_list = df_ticker_list.join(df_sector_list, on=['Country', 'Symbol'])
-        df_ticker_list.rename(columns={'Security Name': 'SecurityName', 'sector_gf': 'Sector_gf',
-                                       'Symbol': 'Ticker'}, inplace=True)
+        df_ticker_list.rename(columns={'Symbol': 'Ticker'}, inplace=True)
+        df_sector_list = pd.read_csv(self.raw_dir_path + '/ticker_sector_us.csv')
+        df_sector_list = pd.concat([df_sector_list, self.sector]).drop_duplicates().reset_index(drop='index')
+        df_sector_list.to_csv(self.raw_dir_path + '/ticker_sector_us.csv', mode='w', index=False)
+        df_sector_list.rename(columns={'country': 'Country', 'ticker': 'Ticker', 'sector_gf': 'Sector_gf'},
+                              inplace=True)
+        df_ticker_list = df_ticker_list.join(df_sector_list.set_index(['Country', 'Ticker']), on=['Country', 'Ticker'])
+        df_ticker_list.rename(columns={'Security Name': 'SecurityName'}, inplace=True)
         return df_ticker_list
 
     def execute(self):

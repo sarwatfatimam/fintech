@@ -2,6 +2,7 @@ import logging
 import sqlite3
 import pandas as pd
 
+from urllib.request import pathname2url
 from sqlalchemy.engine.url import URL
 from sqlalchemy.engine import create_engine
 
@@ -21,7 +22,11 @@ class SQliteDB:
             if self.db_path is None:
                 conn = sqlite3.connect(':memory:')
             else:
-                conn = sqlite3.connect(self.db_path)
+                try:
+                    db_uri = 'file:{}?mode=rw'.format(pathname2url(self.db_path))
+                    conn = sqlite3.connect(db_uri, uri=True)
+                except Exception as e:
+                    conn = sqlite3.connect(self.db_path)
 
         except Exception as error:
             logging.exception(str(error))

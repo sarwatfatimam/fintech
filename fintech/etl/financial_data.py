@@ -20,6 +20,7 @@ class FinanceData:
         self.df_data = pd.DataFrame(columns=self.mapping['name'].tolist())
         self._raw_files = []
         self.db = SQliteDB('finance_data')
+        self.df_sector = pd.DataFrame()
 
     @property
     def raw_files(self):
@@ -69,8 +70,8 @@ class FinanceData:
         processed_dfs['Month'] = processed_dfs['Period'].astype(str).str[4:6]
         processed_dfs['Quarter'] = 'Q' + np.ceil(processed_dfs['Month'].replace("",None).astype(int)/3).astype(str)
         processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
-        return processed_dfs[['Country', 'Ticker', 'Year', 'Month', 'Quarter', 'Indicator', 'Value', 'ReportPeriod',
-                              'LastUpdatedDateTime', 'RawFile']]
+        return processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
+                              'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
 
     def execute(self):
         self.create_db_table()

@@ -8,6 +8,9 @@ Finance:
        name: 'Ticker'
        dtype: 'char(4)'
      -
+       name: 'Sector'
+       dtype: 'char(32)'
+     -
        name: 'Year'
        dtype: 'char(4)'
      -
