@@ -65,10 +65,12 @@ class FinanceData:
                         processed_dfs.append(indicator_df)
                     line_count += 1
         processed_dfs = pd.concat(processed_dfs)
-        processed_dfs['Period'] = processed_dfs['Period'].replace(r'[a-zA-Z]', '', regex=True)
-        processed_dfs['Year'] = processed_dfs['Period'].astype(str).str[:4]
-        processed_dfs['Month'] = processed_dfs['Period'].astype(str).str[4:6]
-        processed_dfs['Quarter'] = 'Q' + np.ceil(processed_dfs['Month'].replace("",None).astype(int)/3).astype(str)
+        processed_dfs['PeriodTemp'] = processed_dfs['Period'].replace(r'[a-zA-Z]|\,|\.|/', '', regex=True)
+        processed_dfs['Year'] = processed_dfs['PeriodTemp'].astype(str).str[:4]
+        processed_dfs['Month'] = processed_dfs['PeriodTemp'].astype(str).str[4:6]
+        processed_dfs['Quarter'] = 'Q' + np.ceil(processed_dfs['Month'].replace("", None).astype(int)/3).astype(str)
+        processed_dfs['Quarter'] = np.where(processed_dfs['Period'].str.contains(r'[a-zA-Z]|,|/', na=False),
+                                            processed_dfs['Period'], processed_dfs['Quarter'])
         processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
         return processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
                               'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
