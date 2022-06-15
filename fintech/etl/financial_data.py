@@ -2,6 +2,7 @@ import csv
 import numpy as np
 import os
 import re
+import shutil
 
 import dateutil.parser as dparser
 import pandas as pd
@@ -16,6 +17,7 @@ class FinanceData:
         self.schema = read_meta('fintech', 'finance', 'etl/config/')['Finance']
         self.mapping = pd.DataFrame(self.schema['fields'])
         self.raw_dir_path = './fintech/raw/finance'
+        self.process_dir_path = './fintech/raw/processed'
         self.df_data = pd.DataFrame(columns=self.mapping['name'].tolist())
         self._raw_files = []
         self.db = SQliteDB('finance_data')
@@ -64,6 +66,8 @@ class FinanceData:
                                                                                         f, update_date, None
                         processed_dfs.append(indicator_df)
                     line_count += 1
+            shutil.copyfile(f'{self.raw_dir_path}/{f}', f'{self.process_dir_path}/{f}')
+            os.remove(f'{self.raw_dir_path}/{f}')
         processed_dfs = pd.concat(processed_dfs)
         processed_dfs['PeriodTemp'] = processed_dfs['Period'].replace(r'[a-zA-Z]|\,|\.|/', '', regex=True)
         processed_dfs['Year'] = processed_dfs['PeriodTemp'].astype(str).str[:4]
