@@ -43,7 +43,8 @@ class MasterData:
             df_sector_list.to_csv(self.raw_dir_path + '/ticker_sector_us.csv', mode='w', index=False)
             df_sector_list.rename(columns={'country': 'Country', 'ticker': 'Ticker', 'sector_gf': 'Sector_gf'},
                                   inplace=True)
-            df_ticker_list = df_ticker_list.join(df_sector_list.set_index(['Country', 'Ticker']), on=['Country', 'Ticker'])
+            df_ticker_list = df_ticker_list.join(df_sector_list.set_index(['Country', 'Ticker']), on=['Country',
+                                                                                                      'Ticker'])
             df_ticker_list.rename(columns={'Security Name': 'SecurityName'}, inplace=True)
             move_processed_file(self.raw_dir_path, self.process_dir_path, 'ticker_list_us.csv')
             move_processed_file(self.raw_dir_path, self.process_dir_path, 'ticker_sector_us.csv')
