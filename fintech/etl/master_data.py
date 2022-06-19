@@ -47,12 +47,10 @@ class MasterData:
             df_ticker_list.rename(columns={'Security Name': 'SecurityName'}, inplace=True)
             move_processed_file(self.raw_dir_path, self.process_dir_path, 'ticker_list_us.csv')
             move_processed_file(self.raw_dir_path, self.process_dir_path, 'ticker_sector_us.csv')
-            return df_ticker_list
+            self.insert_db_table(df_ticker_list)
         else:
             print('No new data to be processed for Master Ticker List and Sector')
-            return pd.DataFrame()
 
     def execute(self):
         self.create_db_table()
-        df = self.processing()
-        self.insert_db_table(df)
+        self.processing()

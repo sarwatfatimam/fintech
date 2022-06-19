@@ -78,13 +78,12 @@ class FinanceData:
             processed_dfs['Quarter'] = np.where(processed_dfs['Period'].str.contains(r'[a-zA-Z]|,|/', na=False),
                                                 processed_dfs['Period'], processed_dfs['Quarter'])
             processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
-            return processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
-                                  'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
+            df = processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
+                                'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
+            self.insert_db_table(df)
         else:
             print('No new data to be processed for Finance')
-            return pd.DataFrame()
 
     def execute(self):
         self.create_db_table()
-        df = self.process_csv_files()
-        self.insert_db_table(df)
+        self.process_csv_files()

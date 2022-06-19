@@ -27,12 +27,10 @@ class OCHLData:
             df_ochl_all = pd.read_csv(self.raw_dir_path+'/ticker_ochl_all.csv')
             df_ochl_all.rename(columns={'Stock Splits': 'StockSplits'}, inplace=True)
             move_processed_file(self.raw_dir_path, self.process_dir_path, 'ticker_ochl_all.csv')
-            return df_ochl_all
+            self.insert_db_table(df_ochl_all)
         else:
             print('No new data to be processed for OCHL')
-            return pd.DataFrame()
 
     def execute(self):
         self.create_db_table()
-        df = self.processing()
-        self.insert_db_table(df)
+        self.processing()
