@@ -1,1 +1,18 @@
-
+ETLStatus:
+   name: "ETLStatus"
+   fields:
+     -
+       name: 'Function'
+       dtype: 'varchar(32)'
+     -
+       name: 'File'
+       dtype: 'varchar(96)'
+     -
+       name: 'Progress'
+       dtype: 'char(32)'
+     -
+       name: 'DateTime'
+       dtype: 'datetime'
+     -
+       name: 'Remarks'
+       dtype: 'text'
