@@ -3,7 +3,7 @@ import pandas as pd
 
 from fintech.utils.db import SQliteDB
 from fintech.utils.helper import read_meta
-from fintech.utils.helper import move_processed_file
+from fintech.utils.helper import move_processed_file, sorting_files_on_modification_dt
 
 
 class OCHLData:
@@ -24,12 +24,15 @@ class OCHLData:
     def processing(self):
         file_list = os.listdir(self.raw_dir_path)
         if len(file_list) != 0:
-            df_ochl_all = pd.read_csv(self.raw_dir_path+'/ticker_ochl_all.csv')
-            df_ochl_all.rename(columns={'Stock Splits': 'StockSplits'}, inplace=True)
-            move_processed_file(self.raw_dir_path, self.process_dir_path, 'ticker_ochl_all.csv')
-            self.insert_db_table(df_ochl_all)
+            sorted_files = sorting_files_on_modification_dt(self.raw_dir_path, file_list)
+            file_list = sorted_files['files'].to_list()
+            for file in file_list:
+                df_ochl_all = pd.read_csv(f'{self.raw_dir_path}/{file}')
+                df_ochl_all.rename(columns={'Stock Splits': 'StockSplits'}, inplace=True)
+                move_processed_file(self.raw_dir_path, self.process_dir_path, file)
+                self.insert_db_table(df_ochl_all)
         else:
-            print('No new data to be processed for OCHL')
+            print('No new data to be processed for ochl')
 
     def execute(self):
         self.create_db_table()

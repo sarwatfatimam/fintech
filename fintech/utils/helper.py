@@ -1,7 +1,11 @@
-import pkgutil
-import yaml
-import shutil
 import os
+import yaml
+import time
+import pkgutil
+import shutil
+
+import pandas as pd
+import numpy as np
 
 
 def read_meta(package, file_name, prefix='config/'):
@@ -21,3 +25,13 @@ def move_processed_file(src_path, dest_path, file):
         shutil.copy(src_file_path, os.path.join(dest_path, '{}_{}{}'.format(base, i, extension)))
         os.remove(f'{src_path}/{file}')
 
+
+def sorting_files_on_modification_dt(src_path, file_list):
+
+    sorted_files = pd.DataFrame({'files': file_list})
+    modified_date = []
+    for f in file_list:
+        modified_epoch = os.path.getmtime(f'{src_path}/{f}')
+        modified_date.append(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(modified_epoch)))
+    sorted_files['modified_date'] = modified_date
+    return sorted_files.sort_values(by='modified_date', ascending=False)
