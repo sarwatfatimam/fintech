@@ -34,7 +34,12 @@ class FinanceData:
         return self._raw_files
 
     def create_db_table(self):
-        self.db.create_table(mappings=self.mapping, table_name=self.schema['name'])
+        check = self.db.select(f"SELECT name FROM sqlite_schema WHERE type='table' "
+                               f"and name = '{self.schema['name']}';")
+        if check.empty:
+            self.db.create_table(mappings=self.mapping, table_name=self.schema['name'])
+        else:
+            info('Table is not created as it already exists in db')
 
     def insert_db_table(self, df):
         self.db.insert_into(df, table_name=self.schema['name'])

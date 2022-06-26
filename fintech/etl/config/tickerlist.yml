@@ -2,17 +2,17 @@ TickerList:
    name: "TickerList"
    fields:
      -
-       name: 'Country'
+       name: 'country'
        dtype: 'char(32)'
      -
-       name: 'Ticker'
+       name: 'ticker'
        dtype: 'char(4)'
      -
-       name: 'SecurityName'
+       name: 'securityname'
        dtype: 'char(32)'
      -
-       name: 'Exchange'
+       name: 'exchange'
        dtype: 'char(32)'
      -
-       name: 'Sector_gf'
+       name: 'sector_gf'
        dtype: 'char(32)'

@@ -2,32 +2,32 @@ TickerOCHL:
    name: "TickerOCHLAll"
    fields:
      -
-       name: 'Country'
+       name: 'country'
        dtype: 'char(32)'
      -
-       name: 'Ticker'
+       name: 'ticker'
        dtype: 'char(4)'
      -
-       name: 'Date'
+       name: 'date'
        dtype: 'datetime'
      -
-       name: 'Open'
+       name: 'open'
        dtype: 'decimal(6,3)'
      -
-       name: 'High'
+       name: 'high'
        dtype: 'decimal(6,3)'
      -
-       name: 'Low'
+       name: 'low'
        dtype: 'decimal(6,3)'
      -
-       name: 'Close'
+       name: 'close'
        dtype: 'decimal(6,3)'
      -
-       name: 'Volume'
+       name: 'volume'
        dtype: 'decimal(6,3)'
      -
-       name: 'Dividends'
+       name: 'dividends'
        dtype: 'decimal(6,3)'
      -
-       name: 'StockSplits'
+       name: 'stocksplits'
        dtype: 'decimal(6,3)'

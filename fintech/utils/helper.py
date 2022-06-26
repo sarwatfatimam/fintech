@@ -23,7 +23,7 @@ def move_processed_file(src_path, dest_path, file):
         while os.path.exists(os.path.join(dest_path, '{}_{}{}'.format(base, i, extension))):
             i += 1
         shutil.copy(src_file_path, os.path.join(dest_path, '{}_{}{}'.format(base, i, extension)))
-        os.remove(f'{src_path}/{file}')
+    os.remove(f'{src_path}/{file}')
 
 
 def sorting_files_on_modification_dt(src_path, file_list):
