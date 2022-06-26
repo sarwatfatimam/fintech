@@ -1,7 +1,9 @@
 import os
 import pandas as pd
 
+from fintech.etl.etl_status import ETLStatus
 from fintech.utils.db import SQliteDB
+from fintech.utils.logs import info, exception
 from fintech.utils.helper import read_meta
 from fintech.utils.helper import move_processed_file, sorting_files_on_modification_dt
 
@@ -14,6 +16,7 @@ class OCHLData:
         self.raw_dir_path = './fintech/raw/ochl'
         self.process_dir_path = './fintech/raw/processed'
         self.db = SQliteDB('ochl_data')
+        self.etlstatus = ETLStatus('ochl_import')
 
     def create_db_table(self):
         self.db.create_table(mappings=self.mapping, table_name=self.schema['name'])
@@ -26,13 +29,19 @@ class OCHLData:
         if len(file_list) != 0:
             sorted_files = sorting_files_on_modification_dt(self.raw_dir_path, file_list)
             file_list = sorted_files['files'].to_list()
+            self.etlstatus.scheduled(file_list)
             for file in file_list:
-                df_ochl_all = pd.read_csv(f'{self.raw_dir_path}/{file}')
-                df_ochl_all.rename(columns={'Stock Splits': 'StockSplits'}, inplace=True)
-                move_processed_file(self.raw_dir_path, self.process_dir_path, file)
-                self.insert_db_table(df_ochl_all)
+                try:
+                    self.etlstatus.start(file)
+                    df_ochl_all = pd.read_csv(f'{self.raw_dir_path}/{file}')
+                    df_ochl_all.rename(columns={'Stock Splits': 'StockSplits'}, inplace=True)
+                    self.insert_db_table(df_ochl_all)
+                    move_processed_file(self.raw_dir_path, self.process_dir_path, file)
+                    self.etlstatus.complete(file)
+                except Exception as error:
+                    self.etlstatus.error(file, exception(str(error)))
         else:
-            print('No new data to be processed for ochl')
+            info('No new data to be processed for ochl')
 
     def execute(self):
         self.create_db_table()

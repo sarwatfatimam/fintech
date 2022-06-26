@@ -8,7 +8,9 @@ import pandas as pd
 
 from fintech.utils.db import SQliteDB
 from fintech.utils.helper import read_meta
-from fintech.utils.helper import move_processed_file
+from fintech.etl.etl_status import ETLStatus
+from fintech.utils.logs import info, exception
+from fintech.utils.helper import move_processed_file, sorting_files_on_modification_dt
 
 
 class FinanceData:
@@ -22,6 +24,7 @@ class FinanceData:
         self._raw_files = []
         self.db = SQliteDB('finance_data')
         self.df_sector = pd.DataFrame()
+        self.etlstatus = ETLStatus('finance_data_import')
 
     @property
     def raw_files(self):
@@ -38,51 +41,59 @@ class FinanceData:
 
     def process_csv_files(self):
         file_list = os.listdir(self.raw_dir_path)
+        sorted_files = sorting_files_on_modification_dt(self.raw_dir_path, file_list)
+        file_list = sorted_files['files'].to_list()
+        self.etlstatus.scheduled(file_list)
         if len(file_list) != 0:
-            indicator_df = pd.DataFrame()
-            processed_dfs = []
-            for f in self.raw_files:
-                print(f'Processing file {f}')
-                with open(f'{self.raw_dir_path}/{f}') as csv_file:
-                    csv_reader = csv.reader(csv_file)
-                    line_count = 0
-                    for row in csv_reader:
-                        if line_count == 0:
-                            update_date = dparser.parse(row[0], fuzzy=True)
-                        if line_count == 4:
-                            ticker = row[0]
-                            country = row[2]
-                            sector = row[3]
-                        if re.search('annual data', ','.join([i.lower() for i in row])):
-                            annual_quarter_data = pd.read_csv(csv_file, header=None)
-                            aqd_transposed = annual_quarter_data.T
-                            for c in aqd_transposed.columns.tolist():
-                                if c + 1 <= (len(aqd_transposed.columns.tolist()) - 1):
-                                    temp = pd.DataFrame(aqd_transposed[[0, c + 1]][2:])
-                                    temp['Indicator'] = aqd_transposed[c + 1][0]
-                                    temp.rename(columns={c + 1: 'Value', 0: 'Period'}, inplace=True)
+            try:
+                indicator_df = pd.DataFrame()
+                processed_dfs = []
+                for file in self.raw_files:
+                    self.etlstatus.start(file)
+                    print(f'Processing file {file}')
+                    with open(f'{self.raw_dir_path}/{file}') as csv_file:
+                        csv_reader = csv.reader(csv_file)
+                        line_count = 0
+                        for row in csv_reader:
+                            if line_count == 0:
+                                update_date = dparser.parse(row[0], fuzzy=True)
+                            if line_count == 4:
+                                ticker = row[0]
+                                country = row[2]
+                                sector = row[3]
+                            if re.search('annual data', ','.join([i.lower() for i in row])):
+                                annual_quarter_data = pd.read_csv(csv_file, header=None)
+                                aqd_transposed = annual_quarter_data.T
+                                for c in aqd_transposed.columns.tolist():
+                                    if c + 1 <= (len(aqd_transposed.columns.tolist()) - 1):
+                                        temp = pd.DataFrame(aqd_transposed[[0, c + 1]][2:])
+                                        temp['Indicator'] = aqd_transposed[c + 1][0]
+                                        temp.rename(columns={c + 1: 'Value', 0: 'Period'}, inplace=True)
 
-                                    indicator_df = pd.concat([indicator_df, temp])
-                                    indicator_df[['Country', 'Ticker', 'Sector', 'RawFile',
-                                                  'LastUpdatedDateTime', 'ReportPeriod']] = country, ticker, sector, \
-                                                                                            f, update_date, None
-                            processed_dfs.append(indicator_df)
-                        line_count += 1
-                move_processed_file(self.raw_dir_path, self.process_dir_path, f)
-            processed_dfs = pd.concat(processed_dfs)
-            processed_dfs['PeriodTemp'] = processed_dfs['Period'].replace(r'[a-zA-Z]|\,|\.|/', '', regex=True)
-            processed_dfs['Year'] = processed_dfs['PeriodTemp'].astype(str).str[:4]
-            processed_dfs['Month'] = processed_dfs['PeriodTemp'].astype(str).str[4:6]
-            processed_dfs['Quarter'] = 'Q' + np.ceil(processed_dfs['Month'].replace("",
-                                                                                    None).astype(int) / 3).astype(str)
-            processed_dfs['Quarter'] = np.where(processed_dfs['Period'].str.contains(r'[a-zA-Z]|,|/', na=False),
-                                                processed_dfs['Period'], processed_dfs['Quarter'])
-            processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
-            df = processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
-                                'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
-            self.insert_db_table(df)
+                                        indicator_df = pd.concat([indicator_df, temp])
+                                        indicator_df[['Country', 'Ticker', 'Sector', 'RawFile',
+                                                      'LastUpdatedDateTime', 'ReportPeriod']] = country, ticker, sector, \
+                                                                                                file, update_date, None
+                                processed_dfs.append(indicator_df)
+                            line_count += 1
+                    move_processed_file(self.raw_dir_path, self.process_dir_path, file)
+                    self.etlstatus.complete(file)
+                processed_dfs = pd.concat(processed_dfs)
+                processed_dfs['PeriodTemp'] = processed_dfs['Period'].replace(r'[a-zA-Z]|\,|\.|/', '', regex=True)
+                processed_dfs['Year'] = processed_dfs['PeriodTemp'].astype(str).str[:4]
+                processed_dfs['Month'] = processed_dfs['PeriodTemp'].astype(str).str[4:6]
+                processed_dfs['Quarter'] = 'Q' + np.ceil(processed_dfs['Month'].replace("",
+                                                                                        None).astype(int) / 3).astype(str)
+                processed_dfs['Quarter'] = np.where(processed_dfs['Period'].str.contains(r'[a-zA-Z]|,|/', na=False),
+                                                    processed_dfs['Period'], processed_dfs['Quarter'])
+                processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
+                df = processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
+                                    'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
+                self.insert_db_table(df)
+            except Exception as error:
+                self.etlstatus.error(file, exception(str(error)))
         else:
-            print('No new data to be processed for Finance')
+            info('No new data to be processed for Finance')
 
     def execute(self):
         self.create_db_table()

@@ -34,4 +34,4 @@ def sorting_files_on_modification_dt(src_path, file_list):
         modified_epoch = os.path.getmtime(f'{src_path}/{f}')
         modified_date.append(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(modified_epoch)))
     sorted_files['modified_date'] = modified_date
-    return sorted_files.sort_values(by='modified_date', ascending=False)
+    return sorted_files.sort_values(by='modified_date', ascending=True)
