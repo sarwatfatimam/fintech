@@ -81,13 +81,12 @@ class FinanceData:
                                         temp = pd.DataFrame(aqd_transposed[[0, c + 1]][2:])
                                         temp['Indicator'] = aqd_transposed[c + 1][0]
                                         temp.rename(columns={c + 1: 'Value', 0: 'Period'}, inplace=True)
+                                        indicator_df = pd.concat([indicator_df, temp])
                                         indicator_df[['Country', 'Ticker', 'Sector', 'RawFile',
                                                       'LastUpdatedDateTime', 'ReportPeriod']] = country, ticker, sector, \
                                                                                                 file, update_date, None
                                 processed_dfs.append(indicator_df)
                             line_count += 1
-                    move_processed_file(self.raw_dir_path, self.process_dir_path, file)
-                    self.etlstatus.complete(file)
                 processed_dfs = pd.concat(processed_dfs)
                 processed_dfs['PeriodTemp'] = processed_dfs['Period'].replace(r'[a-zA-Z]|\,|\.|/', '', regex=True)
                 processed_dfs['Year'] = processed_dfs['PeriodTemp'].astype(str).str[:4]
@@ -99,6 +98,9 @@ class FinanceData:
                 processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
                 df = processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
                                     'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
+                for file in self.raw_files:
+                    move_processed_file(self.raw_dir_path, self.process_dir_path, file)
+                    self.etlstatus.complete(file)
                 check = self.cdc.check(df_prev, df)
                 if check:
                     self.insert_db_table(df)
