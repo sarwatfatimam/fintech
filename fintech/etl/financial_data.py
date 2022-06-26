@@ -26,7 +26,7 @@ class FinanceData:
         self.db = SQliteDB('finance_data')
         self.df_sector = pd.DataFrame()
         self.etlstatus = ETLStatus('finance_data_import')
-        self.indicator_keys = ['country', 'ticker', 'year', 'month', 'indicator']
+        self.indicator_keys = ['Country', 'Ticker', 'Year', 'Month', 'Indicator']
         self.cdc = CDC(self.indicator_keys, self.db, self.schema['name'])
 
     @property
