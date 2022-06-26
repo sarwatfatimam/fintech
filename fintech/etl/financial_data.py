@@ -81,27 +81,24 @@ class FinanceData:
                                         temp = pd.DataFrame(aqd_transposed[[0, c + 1]][2:])
                                         temp['Indicator'] = aqd_transposed[c + 1][0]
                                         temp.rename(columns={c + 1: 'Value', 0: 'Period'}, inplace=True)
-
-                                        indicator_df = pd.concat([indicator_df, temp])
                                         indicator_df[['Country', 'Ticker', 'Sector', 'RawFile',
                                                       'LastUpdatedDateTime', 'ReportPeriod']] = country, ticker, sector, \
                                                                                                 file, update_date, None
-                                indicator_df.columns = map(str.lower, indicator_df.columns)
                                 processed_dfs.append(indicator_df)
                             line_count += 1
                     move_processed_file(self.raw_dir_path, self.process_dir_path, file)
                     self.etlstatus.complete(file)
                 processed_dfs = pd.concat(processed_dfs)
-                processed_dfs['PeriodTemp'] = processed_dfs['period'].replace(r'[a-zA-Z]|\,|\.|/', '', regex=True)
-                processed_dfs['year'] = processed_dfs['PeriodTemp'].astype(str).str[:4]
-                processed_dfs['month'] = processed_dfs['PeriodTemp'].astype(str).str[4:6]
-                processed_dfs['quarter'] = 'Q' + np.ceil(processed_dfs['month'].replace("",
+                processed_dfs['PeriodTemp'] = processed_dfs['Period'].replace(r'[a-zA-Z]|\,|\.|/', '', regex=True)
+                processed_dfs['Year'] = processed_dfs['PeriodTemp'].astype(str).str[:4]
+                processed_dfs['Month'] = processed_dfs['PeriodTemp'].astype(str).str[4:6]
+                processed_dfs['Quarter'] = 'Q' + np.ceil(processed_dfs['Month'].replace("",
                                                                                         None).astype(int) / 3).astype(str)
-                processed_dfs['quarter'] = np.where(processed_dfs['period'].str.contains(r'[a-zA-Z]|,|/', na=False),
-                                                    processed_dfs['period'], processed_dfs['quarter'])
-                processed_dfs['quarter'] = processed_dfs['quarter'].str.replace(r'\.0$', '', regex=True)
-                df = processed_dfs[['country', 'ticker', 'sector', 'year', 'month', 'quarter', 'indicator', 'value',
-                                    'reportperiod', 'lastupdateddatetime', 'rawfile']]
+                processed_dfs['Quarter'] = np.where(processed_dfs['Period'].str.contains(r'[a-zA-Z]|,|/', na=False),
+                                                    processed_dfs['Period'], processed_dfs['Quarter'])
+                processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
+                df = processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
+                                    'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
                 check = self.cdc.check(df_prev, df)
                 if check:
                     self.insert_db_table(df)

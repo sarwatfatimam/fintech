@@ -2,35 +2,35 @@ Finance:
    name: "FinanceData"
    fields:
      -
-       name: 'country'
+       name: 'Country'
        dtype: 'char(32)'
      -
-       name: 'ticker'
+       name: 'Ticker'
        dtype: 'char(4)'
      -
-       name: 'sector'
+       name: 'Sector'
        dtype: 'char(32)'
      -
-       name: 'year'
+       name: 'Year'
        dtype: 'char(4)'
      -
-       name: 'month'
+       name: 'Month'
        dtype: 'char(4)'
      -
-       name: 'quarter'
+       name: 'Quarter'
        dtype: 'varchar(24)'
      -
-       name: 'indicator'
+       name: 'Indicator'
        dtype: 'varchar(32)'
      -
-       name: 'value'
+       name: 'Value'
        dtype: 'decimal(12,3)'
      -
-       name: 'reportperiod'
+       name: 'ReportPeriod'
        dtype: 'char(32)'
      -
-       name: 'lastupdateddatetime'
+       name: 'LastUpdatedDateTime'
        dtype: 'datetime'
      -
-       name: 'rawfile'
+       name: 'RawFile'
        dtype: 'varchar(64)'

@@ -7,9 +7,9 @@ from fintech.utils.db import SQliteDB
 
 def etl():
 
-    # ETLStatus('master_data').create_db_table()
-    # FinanceData().execute()
-    # MasterData().execute()
+    ETLStatus('master_data').create_db_table()
+    FinanceData().execute()
+    MasterData().execute()
     OCHLData().execute()
 
 
