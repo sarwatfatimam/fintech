@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from fintech.utils.db import SQliteDB
+from fintech.etl.cdc import CDC
 from fintech.utils.helper import read_meta
 from fintech.etl.etl_status import ETLStatus
 from fintech.utils.logs import info, exception
@@ -25,6 +26,8 @@ class FinanceData:
         self.db = SQliteDB('finance_data')
         self.df_sector = pd.DataFrame()
         self.etlstatus = ETLStatus('finance_data_import')
+        self.indicator_keys = ['country', 'ticker', 'year', 'month', 'indicator']
+        self.cdc = CDC(self.indicator_keys, self.db, self.schema['name'])
 
     @property
     def raw_files(self):
@@ -44,10 +47,14 @@ class FinanceData:
     def insert_db_table(self, df):
         self.db.insert_into(df, table_name=self.schema['name'])
 
+    def get_prev_data(self):
+        return self.db.select(f'SELECT Distinct {",".join(self.indicator_keys)} FROM {self.schema["name"]}')
+
     def process_csv_files(self):
         file_list = os.listdir(self.raw_dir_path)
         sorted_files = sorting_files_on_modification_dt(self.raw_dir_path, file_list)
         file_list = sorted_files['files'].to_list()
+        df_prev = self.get_prev_data().drop_duplicates()
         self.etlstatus.scheduled(file_list)
         if len(file_list) != 0:
             try:
@@ -79,24 +86,27 @@ class FinanceData:
                                         indicator_df[['Country', 'Ticker', 'Sector', 'RawFile',
                                                       'LastUpdatedDateTime', 'ReportPeriod']] = country, ticker, sector, \
                                                                                                 file, update_date, None
+                                indicator_df.columns = map(str.lower, indicator_df.columns)
                                 processed_dfs.append(indicator_df)
                             line_count += 1
                     move_processed_file(self.raw_dir_path, self.process_dir_path, file)
                     self.etlstatus.complete(file)
                 processed_dfs = pd.concat(processed_dfs)
-                processed_dfs['PeriodTemp'] = processed_dfs['Period'].replace(r'[a-zA-Z]|\,|\.|/', '', regex=True)
-                processed_dfs['Year'] = processed_dfs['PeriodTemp'].astype(str).str[:4]
-                processed_dfs['Month'] = processed_dfs['PeriodTemp'].astype(str).str[4:6]
-                processed_dfs['Quarter'] = 'Q' + np.ceil(processed_dfs['Month'].replace("",
+                processed_dfs['PeriodTemp'] = processed_dfs['period'].replace(r'[a-zA-Z]|\,|\.|/', '', regex=True)
+                processed_dfs['year'] = processed_dfs['PeriodTemp'].astype(str).str[:4]
+                processed_dfs['month'] = processed_dfs['PeriodTemp'].astype(str).str[4:6]
+                processed_dfs['quarter'] = 'Q' + np.ceil(processed_dfs['month'].replace("",
                                                                                         None).astype(int) / 3).astype(str)
-                processed_dfs['Quarter'] = np.where(processed_dfs['Period'].str.contains(r'[a-zA-Z]|,|/', na=False),
-                                                    processed_dfs['Period'], processed_dfs['Quarter'])
-                processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
-                df = processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
-                                    'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
-                self.insert_db_table(df)
+                processed_dfs['quarter'] = np.where(processed_dfs['period'].str.contains(r'[a-zA-Z]|,|/', na=False),
+                                                    processed_dfs['period'], processed_dfs['quarter'])
+                processed_dfs['quarter'] = processed_dfs['quarter'].str.replace(r'\.0$', '', regex=True)
+                df = processed_dfs[['country', 'ticker', 'sector', 'year', 'month', 'quarter', 'indicator', 'value',
+                                    'reportperiod', 'lastupdateddatetime', 'rawfile']]
+                check = self.cdc.check(df_prev, df)
+                if check:
+                    self.insert_db_table(df)
             except Exception as error:
-                self.etlstatus.error(file, exception(str(error)))
+                self.etlstatus.error(None, exception(str(error)))
         else:
             info('No new data to be processed for Finance')
 
