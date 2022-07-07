@@ -65,6 +65,7 @@ class MasterData:
                 df_ticker_list = df_ticker_list.join(df_sector_list.set_index(['country', 'ticker']), on=['country',
                                                                                                           'ticker'])
                 df_ticker_list.rename(columns={'security name': 'securityname'}, inplace=True)
+                df_ticker_list = df_ticker_list[['ticker', 'securityname', 'exchange', 'country', 'sector_gf']]
                 check = self.cdc.check(df_prev, df_ticker_list)
                 if check:
                     self.insert_db_table(df_ticker_list)

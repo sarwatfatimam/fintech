@@ -7,10 +7,10 @@ from fintech.utils.db import SQliteDB
 
 def etl():
 
-    ETLStatus('master_data').create_db_table()
-    FinanceData().execute()
+    # ETLStatus('master_data').create_db_table()
+    # FinanceData().execute()
     MasterData().execute()
-    OCHLData().execute()
+    # OCHLData().execute()
 
 
 if __name__ == '__main__':
@@ -24,6 +24,6 @@ if __name__ == '__main__':
     # print('master', db_master.select('SELECT name FROM sqlite_schema WHERE type="table";'))
     # print('finance', db_finance.select('SELECT name FROM sqlite_schema WHERE type="table";'))
     # print('ohcl', db_ochl.select('SELECT name FROM sqlite_schema WHERE type="table";'))
-    print(db_ochl.select('SELECT * FROM TickerOCHLAll').shape)
-    print(db_finance.select('SELECT * FROM FinanceData').shape)
+    # print(db_ochl.select('SELECT * FROM TickerOCHLAll').shape)
+    # print(db_finance.select('SELECT * FROM FinanceData').shape)
     print(db_master.select('SELECT * FROM Tickerlist').shape)
