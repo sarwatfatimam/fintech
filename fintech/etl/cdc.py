@@ -12,6 +12,7 @@ class CDC:
     def check(self, prev_data, cur_data):
         if prev_data.empty:
             info('New data is available')
+            return True
         else:
             check_data = pd.concat([prev_data, cur_data[self.indicator_keys]]).drop_duplicates()
             if len(prev_data) == len(check_data):
