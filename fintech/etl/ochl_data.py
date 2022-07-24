@@ -48,6 +48,7 @@ class OCHLData:
                     df_ochl_all = pd.read_csv(f'{self.raw_dir_path}/{file}')
                     df_ochl_all.rename(columns={'Stock Splits': 'stocksplits'}, inplace=True)
                     df_ochl_all.columns = map(str.lower, df_ochl_all.columns)
+                    df_ochl_all['date'] = df_ochl_all['date'].astype('datetime64[ns]').dt.date
                     check = self.cdc.check(df_prev, df_ochl_all)
                     if check:
                         self.insert_db_table(df_ochl_all)

@@ -6,12 +6,12 @@ import dateutil.parser as dparser
 import numpy as np
 import pandas as pd
 
-from fintech.utils.db import SQliteDB
 from fintech.etl.cdc import CDC
-from fintech.utils.helper import read_meta
 from fintech.etl.etl_status import ETLStatus
-from fintech.utils.logs import info, exception
+from fintech.utils.db import SQliteDB
 from fintech.utils.helper import move_processed_file, sorting_files_on_modification_dt
+from fintech.utils.helper import read_meta
+from fintech.utils.logs import info, exception
 
 
 class FinanceData:
@@ -28,6 +28,7 @@ class FinanceData:
         self.etlstatus = ETLStatus('finance_data_import')
         self.indicator_keys = ['Country', 'Ticker', 'Year', 'Month', 'Indicator']
         self.cdc = CDC(self.indicator_keys, self.db, self.schema['name'])
+        self.na_list = ['nan', np.nan, None, 'None', 'none']
 
     @property
     def raw_files(self):
@@ -91,10 +92,14 @@ class FinanceData:
                 processed_dfs['PeriodTemp'] = processed_dfs['Period'].replace(r'[a-zA-Z]|\,|\.|/', '', regex=True)
                 processed_dfs['Year'] = processed_dfs['PeriodTemp'].astype(str).str[:4]
                 processed_dfs['Month'] = processed_dfs['PeriodTemp'].astype(str).str[4:6]
-                processed_dfs['Quarter'] = 'Q' + np.ceil(processed_dfs['Month'].replace("",
-                                                                                        None).astype(int) / 3).astype(str)
+                temp_mqrtr = (np.ceil(pd.to_numeric(processed_dfs['Month'], downcast='integer') / 3)
+                              ).astype(str).replace(r'\.0$', '', regex=True)
+                temp_mqrtr = temp_mqrtr.replace({val: '' for val in self.na_list})
+                temp_qrtr = temp_mqrtr.apply(lambda x: 'Q' if x not in [''] else '')
+                processed_dfs['Quarter'] = temp_qrtr + temp_mqrtr
+                update_dt_qrtr = processed_dfs['LastUpdatedDateTime'].apply(lambda x: 'Q' + str(x.quarter))
                 processed_dfs['Quarter'] = np.where(processed_dfs['Period'].str.contains(r'[a-zA-Z]|,|/', na=False),
-                                                    processed_dfs['Period'], processed_dfs['Quarter'])
+                                                    update_dt_qrtr, processed_dfs['Quarter'])
                 processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
                 df = processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
                                     'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
