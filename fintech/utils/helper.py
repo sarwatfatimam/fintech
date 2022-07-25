@@ -5,7 +5,6 @@ import pkgutil
 import shutil
 
 import pandas as pd
-import numpy as np
 
 
 def read_meta(package, file_name, prefix='config/'):
