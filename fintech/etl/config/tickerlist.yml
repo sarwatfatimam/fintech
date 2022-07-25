@@ -16,3 +16,7 @@ TickerList:
      -
        name: 'sector_gf'
        dtype: 'char(32)'
+   constraints:
+     -
+       type: 'PK'
+       cols: [ 'country', 'ticker']

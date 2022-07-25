@@ -34,3 +34,8 @@ Finance:
      -
        name: 'RawFile'
        dtype: 'varchar(64)'
+
+   constraints:
+     -
+       type: 'PK'
+       cols: ['Country', 'Year', 'Month', 'Indicator']

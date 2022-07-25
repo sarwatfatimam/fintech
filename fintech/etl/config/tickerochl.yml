@@ -31,3 +31,8 @@ TickerOCHL:
      -
        name: 'stocksplits'
        dtype: 'decimal(6,3)'
+
+   constraints:
+     -
+       type: 'PK'
+       cols: [ 'country', 'ticker', 'date']
