@@ -19,6 +19,7 @@ class FinanceData:
     def __init__(self):
         self.schema = read_meta('fintech', 'finance', 'etl/config/')['Finance']
         self.mapping = pd.DataFrame(self.schema['fields'])
+        self.constraints = pd.DataFrame(self.schema['constraints'])
         self.raw_dir_path = './fintech/raw/finance'
         self.process_dir_path = './fintech/raw/processed'
         self.df_data = pd.DataFrame(columns=self.mapping['name'].tolist())
@@ -41,7 +42,8 @@ class FinanceData:
         check = self.db.select(f"SELECT name FROM sqlite_schema WHERE type='table' "
                                f"and name = '{self.schema['name']}';")
         if check.empty:
-            self.db.create_table(mappings=self.mapping, table_name=self.schema['name'])
+            self.db.create_table(mappings=self.mapping, table_name=self.schema['name'],
+                                 constraints=self.constraints['cols'][0])
         else:
             info('Table is not created as it already exists in db')
 
@@ -81,11 +83,16 @@ class FinanceData:
                                     if c + 1 <= (len(aqd_transposed.columns.tolist()) - 1):
                                         temp = pd.DataFrame(aqd_transposed[[0, c + 1]][2:])
                                         temp['Indicator'] = aqd_transposed[c + 1][0]
+                                        temp['ReportPeriod'] = None
                                         temp.rename(columns={c + 1: 'Value', 0: 'Period'}, inplace=True)
+                                        index = temp[(temp['Period'].str.contains(',', regex=True)) |
+                                                     (temp['Period'].isin(self.na_list))].index.values[0]
+                                        temp.loc[0:index - 1, 'ReportPeriod'] = 'Annual'
+                                        temp.loc[index + 1:len(temp) + 1, 'ReportPeriod'] = 'Quarter'
                                         indicator_df = pd.concat([indicator_df, temp])
                                         indicator_df[['Country', 'Ticker', 'Sector', 'RawFile',
-                                                      'LastUpdatedDateTime', 'ReportPeriod']] = country, ticker, sector, \
-                                                                                                file, update_date, None
+                                                      'LastUpdatedDateTime']] = country, ticker, sector, file, \
+                                                                                update_date
                                 processed_dfs.append(indicator_df)
                             line_count += 1
                 processed_dfs = pd.concat(processed_dfs)
@@ -103,6 +110,7 @@ class FinanceData:
                 processed_dfs['Quarter'] = processed_dfs['Quarter'].str.replace(r'\.0$', '', regex=True)
                 df = processed_dfs[['Country', 'Ticker', 'Sector', 'Year', 'Month', 'Quarter', 'Indicator', 'Value',
                                     'ReportPeriod', 'LastUpdatedDateTime', 'RawFile']]
+                df = df.drop_duplicates(subset=self.constraints['cols'][0])
                 for file in self.raw_files:
                     move_processed_file(self.raw_dir_path, self.process_dir_path, file)
                     self.etlstatus.complete(file)

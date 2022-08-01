@@ -14,6 +14,7 @@ class MasterData:
     def __init__(self):
         self.schema = read_meta('fintech', 'tickerlist', 'etl/config/')['TickerList']
         self.mapping = pd.DataFrame(self.schema['fields'])
+        self.constraints = pd.DataFrame(self.schema['constraints'])
         self.raw_dir_path = './fintech/raw/master'
         self.process_dir_path = './fintech/raw/processed'
         self.db = SQliteDB('master_data')
@@ -37,7 +38,8 @@ class MasterData:
         check = self.db.select(f"SELECT name FROM sqlite_schema WHERE type='table' "
                                f"and name = '{self.schema['name']}';")
         if check.empty:
-            self.db.create_table(mappings=self.mapping, table_name=self.schema['name'])
+            self.db.create_table(mappings=self.mapping, table_name=self.schema['name'],
+                                 constraints=self.constraints['cols'][0])
         else:
             info('Table is not created as it already exists in db')
 
@@ -66,6 +68,7 @@ class MasterData:
                                                                                                           'ticker'])
                 df_ticker_list.rename(columns={'security name': 'securityname'}, inplace=True)
                 df_ticker_list = df_ticker_list[['ticker', 'securityname', 'exchange', 'country', 'sector_gf']]
+                df_ticker_list = df_ticker_list.drop_duplicates(subset=self.constraints['cols'][0])
                 check = self.cdc.check(df_prev, df_ticker_list)
                 if check:
                     self.insert_db_table(df_ticker_list)

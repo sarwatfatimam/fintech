@@ -120,7 +120,7 @@ class SQliteDB:
             if conn is not None:
                 conn.close()
 
-    def create_table(self, mappings, table_name, field_name_column='name', data_type_column='dtype'):
+    def create_table(self, mappings, table_name, constraints=[], field_name_column='name', data_type_column='dtype'):
 
         # Validate Parameters
 
@@ -143,7 +143,11 @@ class SQliteDB:
 
             self.drop_table(table_name)
             col_definition = ','.join(mappings['definition'].dropna().values)
-            create_query = f'CREATE TABLE {table_name} ({col_definition})'
+            if len(constraints) != 0:
+                constraints_col = ','.join(constraints)
+                create_query = f'CREATE TABLE {table_name} ({col_definition}, PRIMARY KEY ({constraints_col}))'
+            else:
+                create_query = f'CREATE TABLE {table_name} ({col_definition})'
             self.execute(create_query)
 
         except Exception as error:
